@@ -1,0 +1,66 @@
+apply plugin: 'com.android.library'
+
+apply plugin: 'kotlin-android'
+
+apply plugin: 'kotlin-android-extensions'
+
+apply plugin: 'maven'
+
+def repo = new File(rootDir, "repository")
+def version = "1.0.0"
+
+android {
+    compileSdkVersion 28
+    defaultConfig {
+        minSdkVersion 21
+        targetSdkVersion 28
+        versionCode 1
+        versionName version
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    packagingOptions {
+        exclude 'assets/*'
+    }
+    libraryVariants.all { variant ->
+        variant.outputs.all { output ->
+            output.packageLibrary.exclude("libs/*")
+            if (variant.name == android.buildTypes.release.name) {
+                outputFileName = output.outputFile.name.replace(("-release.aar"), "-${version}.aar")
+            } else if (variant.name == android.buildTypes.debug.name) {
+                outputFileName = output.outputFile.name.replace((".aar"), "-${version}.aar")
+            }
+        }
+    }
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    implementation "androidx.appcompat:appcompat:${ktx_support}"
+    implementation 'androidx.core:core-ktx:1.1.0-alpha05'
+    implementation "androidx.lifecycle:lifecycle-extensions:${life_cycle}"
+    implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:${life_cycle}"
+    implementation "androidx.lifecycle:lifecycle-livedata:${life_cycle}"
+    implementation "com.google.android.material:material:1.0.0"
+
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation 'androidx.test:runner:1.2.0-alpha04'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0-alpha04'
+}
+
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            repository url: "file://${repo.absolutePath}"
+            pom.version = version             // version
+            pom.groupId = 'com.farmanlab'    // グループ名
+            pom.artifactId = 'coroutine-dialog-fragment' // ライブラリ名
+        }
+    }
+}
