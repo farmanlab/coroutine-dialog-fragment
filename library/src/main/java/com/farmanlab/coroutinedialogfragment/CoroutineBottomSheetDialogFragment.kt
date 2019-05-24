@@ -1,7 +1,6 @@
 package com.farmanlab.coroutinedialogfragment
 
 import androidx.lifecycle.ViewModelProviders
-import androidx.lifecycle.get
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.channels.Channel
@@ -10,7 +9,18 @@ import kotlinx.coroutines.launch
 abstract class CoroutineBottomSheetDialogFragment<T> : BottomSheetDialogFragment() {
     private val onAttachEventChannel = Channel<Unit>()
     protected val channelViewModel: ChannelDialogViewModel<T> by lazy { provideViewModel() }
-    private fun provideViewModel(): ChannelDialogViewModel<T> = ViewModelProviders.of(requireActivity()).get()
+
+    /**
+     * You can override this property if want to use fragment scope, your factory and so on...
+     */
+    protected open val viewModelProvider by lazy { ViewModelProviders.of(requireActivity()) }
+
+    @Suppress("UNCHECKED_CAST")
+    private fun provideViewModel(): ChannelDialogViewModel<T> =
+        viewModelProvider.let {
+            val viewModelKey = tag ?: this::class.java.simpleName
+            it.get(viewModelKey, ChannelDialogViewModel::class.java) as ChannelDialogViewModel<T>
+        }
 
     @androidx.annotation.CallSuper
     override fun onViewCreated(view: android.view.View, savedInstanceState: android.os.Bundle?) {
@@ -24,7 +34,10 @@ abstract class CoroutineBottomSheetDialogFragment<T> : BottomSheetDialogFragment
         super.onCancel(dialog)
     }
 
-    suspend fun showAndResult(fragmentManager: androidx.fragment.app.FragmentManager, tag: String? = null): DialogResult<T> {
+    suspend fun showAndResult(
+        fragmentManager: androidx.fragment.app.FragmentManager,
+        tag: String? = null
+    ): DialogResult<T> {
         show(fragmentManager, tag)
         onAttachEventChannel.receive()
         return channelViewModel.channel.receive()
