@@ -3,7 +3,7 @@ package com.farmanlab.coroutinedialogfragment
 import android.app.Dialog
 import android.os.Bundle
 import androidx.appcompat.app.AlertDialog
-import androidx.core.content.ContextCompat
+import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.os.bundleOf
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Dispatchers
@@ -54,6 +54,7 @@ class SimpleCoroutineDialogFragment : CoroutineDialogFragment<Unit>() {
                 }
                 positive?.let {
                     setPositiveButton(it) { _, _ ->
+                        // viewLifecycleOwner is not available here yet
                         lifecycleScope.launch(Dispatchers.Main) {
                             channelViewModel.channel.send(
                                 DialogResult.Ok(Unit)
@@ -62,10 +63,11 @@ class SimpleCoroutineDialogFragment : CoroutineDialogFragment<Unit>() {
                     }
                 }
                 positiveIcon?.let {
-                    setPositiveButtonIcon(ContextCompat.getDrawable(context, it))
+                    setPositiveButtonIcon(AppCompatResources.getDrawable(context, it))
                 }
                 negative?.let {
                     setNegativeButton(it) { _, _ ->
+                        // viewLifecycleOwner is not available here yet
                         lifecycleScope.launch(Dispatchers.Main) {
                             channelViewModel.channel.send(
                                 DialogResult.Cancel
@@ -74,10 +76,11 @@ class SimpleCoroutineDialogFragment : CoroutineDialogFragment<Unit>() {
                     }
                 }
                 negativeIcon?.let {
-                    setNegativeButtonIcon(ContextCompat.getDrawable(context, it))
+                    setNegativeButtonIcon(AppCompatResources.getDrawable(context, it))
                 }
                 neutral?.let {
                     setNeutralButton(it) { _, _ ->
+                        // viewLifecycleOwner is not available here yet
                         lifecycleScope.launch(Dispatchers.Main) {
                             channelViewModel.channel.send(
                                 DialogResult.Neutral
@@ -86,7 +89,7 @@ class SimpleCoroutineDialogFragment : CoroutineDialogFragment<Unit>() {
                     }
                 }
                 neutralIcon?.let {
-                    setNeutralButtonIcon(ContextCompat.getDrawable(context, it))
+                    setNeutralButtonIcon(AppCompatResources.getDrawable(context, it))
                 }
             }
             .create()

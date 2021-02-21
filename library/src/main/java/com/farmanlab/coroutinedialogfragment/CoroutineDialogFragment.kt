@@ -3,6 +3,7 @@ package com.farmanlab.coroutinedialogfragment
 import android.content.DialogInterface
 import androidx.appcompat.app.AppCompatDialogFragment
 import androidx.fragment.app.FragmentManager
+import androidx.fragment.app.FragmentTransaction
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
@@ -29,6 +30,7 @@ abstract class CoroutineDialogFragment<T> : AppCompatDialogFragment() {
     override fun onAttach(context: android.content.Context) {
         super.onAttach(context)
         provideViewModel()
+        // viewLifecycleOwner is not available here yet
         lifecycleScope.launch { onAttachEventChannel.send(Unit) }
     }
 
@@ -42,7 +44,9 @@ abstract class CoroutineDialogFragment<T> : AppCompatDialogFragment() {
         fragmentManager: FragmentManager,
         tag: String? = null
     ): DialogResult<T> {
-        show(fragmentManager, tag)
+        val ft: FragmentTransaction = fragmentManager.beginTransaction()
+        ft.add(this, tag)
+        ft.commitAllowingStateLoss()
         onAttachEventChannel.receive()
         return channelViewModel.channel.receive()
     }
