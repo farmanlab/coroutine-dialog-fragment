@@ -1,7 +1,12 @@
 package com.farmanlab.coroutinedialogfragment
 
+import android.app.Dialog
+import android.os.Bundle
+import androidx.appcompat.app.AlertDialog
+import androidx.core.content.ContextCompat
+import androidx.core.os.bundleOf
+import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 
 class SimpleCoroutineDialogFragment : CoroutineDialogFragment<Unit>() {
@@ -35,57 +40,56 @@ class SimpleCoroutineDialogFragment : CoroutineDialogFragment<Unit>() {
     private val isDialogCancelable: Boolean
         get() = checkNotNull(requireArguments().getBoolean(ARGS_IS_CANCELABLE))
 
-    override fun onCreateDialog(savedInstanceState: android.os.Bundle?): android.app.Dialog = androidx.appcompat.app.AlertDialog.Builder(
-        requireContext()
-    )
-        .setTitle(title)
-        .setMessage(message)
-        .apply {
-            this@SimpleCoroutineDialogFragment.isCancelable = isDialogCancelable
-            setCancelable(isDialogCancelable)
-        }
-        .apply {
-            titleIcon?.let {
-                setIcon(it)
+    override fun onCreateDialog(savedInstanceState: Bundle?): Dialog =
+        AlertDialog.Builder(requireContext())
+            .setTitle(title)
+            .setMessage(message)
+            .apply {
+                this@SimpleCoroutineDialogFragment.isCancelable = isDialogCancelable
+                setCancelable(isDialogCancelable)
             }
-            positive?.let {
-                setPositiveButton(it) { _, _ ->
-                    GlobalScope.launch(Dispatchers.Main) {
-                        channelViewModel.channel.send(
-                            DialogResult.Ok(Unit)
-                        )
+            .apply {
+                titleIcon?.let {
+                    setIcon(it)
+                }
+                positive?.let {
+                    setPositiveButton(it) { _, _ ->
+                        lifecycleScope.launch(Dispatchers.Main) {
+                            channelViewModel.channel.send(
+                                DialogResult.Ok(Unit)
+                            )
+                        }
                     }
                 }
-            }
-            positiveIcon?.let {
-                setPositiveButtonIcon(context.getDrawable(it))
-            }
-            negative?.let {
-                setNegativeButton(it) { _, _ ->
-                    GlobalScope.launch(Dispatchers.Main) {
-                        channelViewModel.channel.send(
-                            DialogResult.Cancel
-                        )
+                positiveIcon?.let {
+                    setPositiveButtonIcon(ContextCompat.getDrawable(context, it))
+                }
+                negative?.let {
+                    setNegativeButton(it) { _, _ ->
+                        lifecycleScope.launch(Dispatchers.Main) {
+                            channelViewModel.channel.send(
+                                DialogResult.Cancel
+                            )
+                        }
                     }
                 }
-            }
-            negativeIcon?.let {
-                setNegativeButtonIcon(context.getDrawable(it))
-            }
-            neutral?.let {
-                setNeutralButton(it) { _, _ ->
-                    GlobalScope.launch(Dispatchers.Main) {
-                        channelViewModel.channel.send(
-                            DialogResult.Neutral
-                        )
+                negativeIcon?.let {
+                    setNegativeButtonIcon(ContextCompat.getDrawable(context, it))
+                }
+                neutral?.let {
+                    setNeutralButton(it) { _, _ ->
+                        lifecycleScope.launch(Dispatchers.Main) {
+                            channelViewModel.channel.send(
+                                DialogResult.Neutral
+                            )
+                        }
                     }
                 }
+                neutralIcon?.let {
+                    setNeutralButtonIcon(ContextCompat.getDrawable(context, it))
+                }
             }
-            neutralIcon?.let {
-                setNeutralButtonIcon(context.getDrawable(it))
-            }
-        }
-        .create()
+            .create()
 
     companion object {
         private const val ARGS_TITLE = "title"
@@ -111,17 +115,17 @@ class SimpleCoroutineDialogFragment : CoroutineDialogFragment<Unit>() {
             @androidx.annotation.DrawableRes neutralIcon: Int? = null,
             isCancelable: Boolean = true
         ): SimpleCoroutineDialogFragment = SimpleCoroutineDialogFragment().apply {
-            arguments = androidx.core.os.bundleOf(
-                Pair(ARGS_TITLE, title),
-                Pair(ARGS_TITLE_ICON, titleIcon),
-                Pair(ARGS_MESSAGE, message),
-                Pair(ARGS_POSITIVE_LABEL, positive),
-                Pair(ARGS_POSITIVE_ICON, positiveIcon),
-                Pair(ARGS_NEGATIVE_LABEL, negative),
-                Pair(ARGS_NEGATIVE_ICON, negativeIcon),
-                Pair(ARGS_NEUTRAL_LABEL, neutral),
-                Pair(ARGS_NEUTRAL_ICON, neutralIcon),
-                Pair(ARGS_IS_CANCELABLE, isCancelable)
+            arguments = bundleOf(
+                ARGS_TITLE to title,
+                ARGS_TITLE_ICON to titleIcon,
+                ARGS_MESSAGE to message,
+                ARGS_POSITIVE_LABEL to positive,
+                ARGS_POSITIVE_ICON to positiveIcon,
+                ARGS_NEGATIVE_LABEL to negative,
+                ARGS_NEGATIVE_ICON to negativeIcon,
+                ARGS_NEUTRAL_LABEL to neutral,
+                ARGS_NEUTRAL_ICON to neutralIcon,
+                ARGS_IS_CANCELABLE to isCancelable
             )
         }
     }

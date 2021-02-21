@@ -1,22 +1,22 @@
 package com.farmanlab.coroutinedialogfragment
 
+import android.content.DialogInterface
+import androidx.appcompat.app.AppCompatDialogFragment
 import androidx.fragment.app.FragmentManager
-import kotlinx.coroutines.GlobalScope
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProviders
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
-import kotlin.jvm.java
-import kotlin.let
 
-abstract class CoroutineDialogFragment<T> : androidx.appcompat.app.AppCompatDialogFragment() {
+abstract class CoroutineDialogFragment<T> : AppCompatDialogFragment() {
     private val onAttachEventChannel = Channel<Unit>()
     protected val channelViewModel: InternalViewModel<T> by lazy { provideViewModel() }
 
     /**
      * You can override this property if want to use fragment scope, your factory and so on...
      */
-    protected open val viewModelProvider by lazy { ViewModelProviders.of(requireActivity()) }
+    protected open val viewModelProvider by lazy { ViewModelProvider(requireActivity()) }
 
     @Suppress("UNCHECKED_CAST")
     private fun provideViewModel(): InternalViewModel<T> =
@@ -29,16 +29,19 @@ abstract class CoroutineDialogFragment<T> : androidx.appcompat.app.AppCompatDial
     override fun onAttach(context: android.content.Context) {
         super.onAttach(context)
         provideViewModel()
-        GlobalScope.launch { onAttachEventChannel.send(Unit) }
+        lifecycleScope.launch { onAttachEventChannel.send(Unit) }
     }
 
     @androidx.annotation.CallSuper
-    override fun onCancel(dialog: android.content.DialogInterface) {
+    override fun onCancel(dialog: DialogInterface) {
         channelViewModel.channel.offer(DialogResult.Cancel)
         super.onCancel(dialog)
     }
 
-    suspend fun showAndResult(fragmentManager: FragmentManager, tag: String? = null): DialogResult<T> {
+    suspend fun showAndResult(
+        fragmentManager: FragmentManager,
+        tag: String? = null
+    ): DialogResult<T> {
         show(fragmentManager, tag)
         onAttachEventChannel.receive()
         return channelViewModel.channel.receive()
