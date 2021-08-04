@@ -4,6 +4,7 @@ import android.content.DialogInterface
 import android.os.Bundle
 import android.view.View
 import androidx.fragment.app.FragmentManager
+import androidx.fragment.app.FragmentTransaction
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
@@ -43,7 +44,9 @@ abstract class CoroutineBottomSheetDialogFragment<T> : BottomSheetDialogFragment
         fragmentManager: FragmentManager,
         tag: String? = null
     ): DialogResult<T> {
-        show(fragmentManager, tag)
+        val ft: FragmentTransaction = fragmentManager.beginTransaction()
+        ft.add(this, tag)
+        ft.commitAllowingStateLoss()
         onAttachEventChannel.receive()
         return channelViewModel.channel.receive()
     }
